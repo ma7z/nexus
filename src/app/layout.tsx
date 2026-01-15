@@ -5,7 +5,7 @@ import "./globals.css";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Providers } from "./(app)/providers";
 import { ThemeProvider } from "@/components/system/theme-provider";
-import { AppSidebar } from "@/components/layout/Sidebar";
+import { AppSidebar } from "@/components/layout/sidebar";
 
 const manropeSans = Manrope({
   variable: "--font-manrope-sans",
