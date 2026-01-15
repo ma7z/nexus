@@ -1,10 +1,5 @@
-import PageHeader from "@/components/layout/page/page-header";
+import { redirect } from "next/navigation"
 
-export default function Home() {
-  return (
-    <>
-      <PageHeader title="Início" />
-      <span>oi</span>
-    </>
-  );
+export default function Page() {
+  redirect("/dashboard")
 }

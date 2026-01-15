@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <>
       <PageHeader title="Início" />
-      <span>oi</span>
+      <span>hello</span>
     </>
   );
 }
