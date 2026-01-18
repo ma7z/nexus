@@ -1,12 +1,16 @@
 import PageHeader from "@/components/layout/page/page-header"
 import { getProjects } from "@/lib/projects/get-projects"
+import CreateProjectDialog from "@/components/projects/create-project-dialog"
 
 export default async function ProjectsPage() {
   const projects = await getProjects()
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Projects" />
+      <div className="flex items-center justify-between">
+        <PageHeader title="Projects" />
+        <CreateProjectDialog />
+      </div>
 
       {projects.length === 0 ? (
         <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
