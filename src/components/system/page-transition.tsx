@@ -3,7 +3,7 @@
 import { AnimatePresence } from "framer-motion";
 import { FadeTransition } from "./fade-transition";
 import Loading from "./loading";
-import { usePageLoadingStore } from "@/stores/use-page-loading-store";
+import { usePageLoadingStore } from "@/store/use-page-loading-store";
 
 type Props = {
   children: React.ReactNode;
