@@ -1,21 +1,26 @@
 import { prisma } from "../lib/prisma";
 
-export function createTask(title: string, projectId: string) {
+export function createTask(data: {
+  title: string;
+  projectId: string;
+  priority: "LOW" | "MEDIUM" | "HIGH";
+}) {
   return prisma.task.create({
-    data: {
-      title,
-      projectId,
-    },
+    data,
   });
 }
 
-export function updateTask(taskId: string, title: string, completed: boolean) {
+export function updateTask(
+  taskId: string,
+  data: {
+    title?: string;
+    status?: "OPEN" | "IN_PROGRESS" | "DONE";
+    priority?: "LOW" | "MEDIUM" | "HIGH";
+  }
+) {
   return prisma.task.update({
     where: { id: taskId },
-    data: {
-      title,
-      completed,
-    },
+    data,
   });
 }
 
@@ -29,7 +34,34 @@ export function findTaskWithProject(taskId: string) {
   return prisma.task.findUnique({
     where: { id: taskId },
     include: {
-      project: true,
+      project: {
+        select: {
+          id: true,
+          name: true,
+          workspaceId: true,
+        },
+      },
+    },
+  });
+}
+
+export function findTasksByWorkspace(workspaceId: string) {
+  return prisma.task.findMany({
+    where: {
+      project: {
+        workspaceId,
+      },
+    },
+    include: {
+      project: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
     },
   });
 }
@@ -37,6 +69,8 @@ export function findTaskWithProject(taskId: string) {
 export function findTasksByProject(projectId: string) {
   return prisma.task.findMany({
     where: { projectId },
-    orderBy: { createdAt: "asc" },
+    orderBy: {
+      createdAt: "asc",
+    },
   });
 }
