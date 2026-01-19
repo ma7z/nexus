@@ -1,9 +1,22 @@
 import PageHeader from "@/components/layout/page/page-header"
 import { getProjects } from "@/lib/projects/get-projects"
-import CreateProjectDialog from "@/components/projects/create-project-dialog"
+import CreateProjectDialog from "@/app/dashboard/projects/_components/create-project-dialog"
+import { getCurrentUser } from "@/lib/auth/get-current-user";
+import { getWorkspace } from "@/lib/workspace/get-workspace";
+import { getTasks } from "@/lib/tasks/get-tasks";
 
 export default async function ProjectsPage() {
-  const projects = await getProjects()
+  const user = await getCurrentUser();
+  const workspace = await getWorkspace();
+
+  if (!user || !workspace) {
+    return null;
+  }
+
+  const [tasks, projects] = await Promise.all([
+    getTasks(workspace.id),
+    getProjects(workspace.id),
+  ]);
 
   return (
     <div className="space-y-6">

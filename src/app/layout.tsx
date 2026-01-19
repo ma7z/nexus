@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   description: "The best system for your business",
 };
 
+export const runtime = "nodejs";
+
 export default function RootLayout({
   children,
 }: Readonly<{

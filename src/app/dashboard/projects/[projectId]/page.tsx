@@ -21,7 +21,7 @@ export default async function ProjectPage({ params }: PageProps) {
 
       <div className="rounded-lg border p-4">
         <div className="text-sm text-muted-foreground">Slug</div>
-        <div className="font-medium">{project.slug}</div>
+        {/* <div className="font-medium">{project.slug}</div> */}
       </div>
 
       <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">

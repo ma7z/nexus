@@ -2,9 +2,9 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -13,11 +13,12 @@ enum Role {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
+  id          String             @id @default(cuid())
+  email       String             @unique
+  password    String
+  createdAt   DateTime           @default(now())
   memberships WorkspaceMember[]
+  sessions    Session[]
 }
 
 model Workspace {
@@ -28,6 +29,19 @@ model Workspace {
   invites   Invite[]
   projects  Project[]
 }
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+}
+
 
 model Invite {
   id          String   @id @default(cuid())

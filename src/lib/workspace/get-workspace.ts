@@ -1,17 +1,20 @@
-export async function getWorkspace(token: string) {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/workspaces/current`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    }
-  );
+import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth/get-current-user";
 
-  if (!res.ok) {
+export async function getWorkspace() {
+  const user = await getCurrentUser();
+
+  if (!user) {
     return null;
   }
 
-  return res.json();
+  return prisma.workspace.findFirst({
+    where: {
+      members: {
+        some: {
+          userId: user.id,
+        },
+      },
+    },
+  });
 }

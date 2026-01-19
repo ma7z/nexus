@@ -18,7 +18,7 @@ export default async function DashboardLayout({
   }
 
   const user = await getCurrentUser()
-  const workspace = await getWorkspace(token)
+  const workspace = await getWorkspace()
 
   if (!user || !workspace) {
     redirect("/login")
