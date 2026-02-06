@@ -37,7 +37,7 @@ export async function registerUserWithWorkspace(
     return { ok: false, error: "USERNAME_ALREADY_EXISTS" }
   }
 
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: any) => {
     const user = await createUser(tx, {
       email: input.email,
       name: input.name,
