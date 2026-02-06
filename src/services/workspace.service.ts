@@ -1,19 +1,11 @@
 import type { Prisma } from "@prisma/client";
 import {
-
   addUserToWorkspace,
   createWorkspace,
-  findUserById,
   findWorkspaceByIdAndUser,
 } from "../repositories/workspace.repository";
-import { logAuditEvent } from "./audit.service";
 import { findFirstWorkspaceByUserId } from "@/repositories/workspace.repository";
 import { prisma } from "@/lib/prisma";
-
-type CreateWorkspaceInput = {
-  name: string;
-  userId: string;
-};
 
 export async function getWorkspaceById(
   workspaceId: string,
