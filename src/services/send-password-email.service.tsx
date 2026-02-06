@@ -1,7 +1,5 @@
 import { Resend } from "resend"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export function sendResetPasswordEmail({
   email,
   token
@@ -9,7 +7,16 @@ export function sendResetPasswordEmail({
   email: string
   token: string
 }) {
-  const link = `${process.env.APP_URL}/user/reset-password?token=${token}`
+  const apiKey = process.env.RESEND_API_KEY
+  const appUrl = process.env.APP_URL
+
+  if (!apiKey || !appUrl) {
+    throw new Error("Missing email configuration")
+  }
+
+  const resend = new Resend(apiKey)
+
+  const link = `${appUrl}/user/reset-password?token=${token}`
 
   return resend.emails.send({
     from: "Nexus <onboarding@resend.dev>",
