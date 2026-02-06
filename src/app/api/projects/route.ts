@@ -28,18 +28,26 @@ export async function GET(request: NextRequest) {
     }
 
     const projects = await listProjectsService(userId, workspaceId)
-
     return NextResponse.json(projects)
-  } catch (error) {
+  } catch {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unable to list projects" },
-      { status: 401 }
+      { error: "Unable to list projects" },
+      { status: 500 }
     )
   }
 }
+
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getAuthSession()
+    const session = await getAuthSession()
+    const userId = session?.user?.id
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
 
     const { name, workspaceId } = await request.json()
 
@@ -53,15 +61,14 @@ export async function POST(request: NextRequest) {
     const project = await createProjectService({
       name,
       workspaceId,
-      userId: userId?.user?.id,
+      userId,
     })
 
     return NextResponse.json(project, { status: 201 })
-  } catch (error) {
+  } catch {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unable to create project" },
-      { status: 401 }
+      { error: "Unable to create project" },
+      { status: 500 }
     )
   }
 }
-
