@@ -7,7 +7,7 @@
     "start": "next start",
     "prisma": "prisma",
     "db:push": "prisma db push",
-    "db:generate": "prisma generate"
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@iconify/react": "^6.0.2",
