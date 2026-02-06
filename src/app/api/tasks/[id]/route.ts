@@ -2,21 +2,16 @@ import { NextRequest, NextResponse } from "next/server"
 import { deleteTaskService, updateTaskService } from "@/services/task.service"
 import { getAuthSession } from "@/repositories/session.repository"
 
-type Context = {
-  params: {
-    id: string
-  }
-}
-
 export async function PUT(
   request: NextRequest,
-  context: Context
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params
     const body = await request.json()
 
     const task = await updateTaskService({
-      taskId: context.params.id,
+      taskId: id,
       title: body.title,
       completed: body.completed,
       userId: body.userId,
@@ -34,14 +29,15 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  context: Context
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params
     const session = await getAuthSession()
 
     await deleteTaskService({
-      taskId: context.params.id,
-      userId: session.userId,
+      taskId: id,
+      userId: session?.user?.id,
     })
 
     return NextResponse.json({ success: true })
