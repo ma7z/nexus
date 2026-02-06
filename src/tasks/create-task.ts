@@ -13,5 +13,6 @@ export async function createTaskUseCase(input: {
     title: input.title,
     projectId: input.projectId,
     priority: input.priority,
+    completed: false,
   });
 }
