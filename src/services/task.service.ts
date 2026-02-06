@@ -9,43 +9,53 @@ import {
 import { logAuditEvent } from "./audit.service";
 import { authorizeWorkspaceAction } from "./authorization.service";
 
+type TaskPriority = "LOW" | "MEDIUM" | "HIGH"
+
 type CreateTaskInput = {
-  title: string;
-  projectId: string;
-  workspaceId: string;
-  userId: string;
-};
+  title: string
+  projectId: string
+  workspaceId: string
+  userId: string
+  priority: TaskPriority
+}
 
 export async function createTaskService(input: CreateTaskInput) {
-  const { title, projectId, workspaceId, userId } = input;
-
+  const { title, projectId, workspaceId, userId, priority } = input
+  console.log('creating task,', workspaceId, projectId, priority, userId, title)
   if (!title || title.trim().length < 3) {
-    throw new Error("Invalid task title");
+    throw new Error("Invalid task title")
   }
 
-  await authorizeWorkspaceAction(userId, workspaceId, "MEMBER");
+  await authorizeWorkspaceAction(userId, workspaceId, "MEMBER")
 
-  const task = await createTask(title, projectId);
+  const task = await createTask({
+    title,
+    projectId,
+    completed: false,
+    priority,
+  })
 
   await logAuditEvent({
     userId,
     action: "CREATE_TASK",
     entity: "Task",
     entityId: task.id,
-  });
+  })
 
-  return task;
+  return task
 }
+
 
 type UpdateTaskInput = {
   taskId: string;
   title: string;
   completed: boolean;
+  status: string;
   userId: string;
 };
 
 export async function updateTaskService(input: UpdateTaskInput) {
-  const { taskId, title, completed, userId } = input;
+  const { taskId, title, completed, status, userId } = input;
 
   const task = await findTaskWithProject(taskId);
 
@@ -55,7 +65,9 @@ export async function updateTaskService(input: UpdateTaskInput) {
 
   await authorizeWorkspaceAction(userId, task.project.workspaceId, "MEMBER");
 
-  const updated = await updateTask(taskId, title, completed);
+  // 'priority' is not provided in UpdateTaskInput or in scope, so remove it
+  // 'status' should likely be limited to allowed TaskStatus types
+  const updated = await updateTask(taskId, { status: status as "OPEN" | "IN_PROGRESS" | "DONE" | undefined, title });
 
   await logAuditEvent({
     userId,

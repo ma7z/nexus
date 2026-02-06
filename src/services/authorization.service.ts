@@ -8,7 +8,7 @@ export async function authorizeWorkspaceAction(
   requiredRole: RequiredRole
 ) {
   const membership = await findUserRoleInWorkspace(userId, workspaceId);
-
+  
   if (!membership) {
     throw new Error("User is not part of this workspace");
   }

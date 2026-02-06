@@ -1,13 +1,12 @@
 import { prisma } from "../lib/prisma";
 
 export function createTask(data: {
-  title: string;
-  projectId: string;
-  priority: "LOW" | "MEDIUM" | "HIGH";
+  title: string
+  projectId: string
+  priority: "LOW" | "MEDIUM" | "HIGH"
+  completed: boolean
 }) {
-  return prisma.task.create({
-    data,
-  });
+  return prisma.task.create({ data })
 }
 
 export function updateTask(

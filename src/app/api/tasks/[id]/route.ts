@@ -1,32 +1,30 @@
-import { NextRequest, NextResponse } from "next/server";
-import { verify } from "jsonwebtoken";
-import { deleteTaskService, updateTaskService } from "@/services/task.service";
+import { NextRequest, NextResponse } from "next/server"
+import { deleteTaskService, updateTaskService } from "@/services/task.service"
+import { getAuthSession } from "@/repositories/session.repository"
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const authHeader = request.headers.get("authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-    const payload = verify(token, process.env.JWT_SECRET!) as {
-      userId: string;
-    };
+    const userId = await getAuthSession()
 
-    const body = await request.json();
+    const body = await request.json()
 
     const task = await updateTaskService({
       taskId: params.id,
       title: body.title,
       completed: body.completed,
-      userId: payload.userId,
-    });
+      userId: body.userId,
+      status: body.status,
+    })
 
-    return NextResponse.json(task);
-  } catch {
+    return NextResponse.json(task)
+  } catch (error) {
     return NextResponse.json(
-      { error: "Unable to update task" },
+      { error: error instanceof Error ? error.message : "Unable to update task" },
       { status: 400 }
-    );
+    )
   }
 }
 
@@ -35,22 +33,18 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const authHeader = request.headers.get("authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-    const payload = verify(token, process.env.JWT_SECRET!) as {
-      userId: string;
-    };
+    const userId = await getAuthSession()
 
     await deleteTaskService({
       taskId: params.id,
-      userId: payload.userId,
-    });
+      userId: typeof userId === "string" ? userId : userId?.id,
+    })
 
-    return NextResponse.json({ success: true });
-  } catch {
+    return NextResponse.json({ success: true })
+  } catch (error) {
     return NextResponse.json(
-      { error: "Unable to delete task" },
+      { error: error instanceof Error ? error.message : "Unable to delete task" },
       { status: 403 }
-    );
+    )
   }
 }

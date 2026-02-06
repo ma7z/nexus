@@ -1,18 +1,21 @@
+"use client"
+
 import PageHeader from "@/components/layout/page/page-header";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { getWorkspace } from "@/lib/workspace/get-workspace";
+import { useWorkspaceStore } from "@/store/use-workspace-store";
+
 
 export default function Home() {
-  // const cookieStore = await cookies()
-  // const token = cookieStore.get("token")?.value
+  const workspace = useWorkspaceStore(
+    (state) => state.workspace
+  )
+  const user = useWorkspaceStore((state) => state.user)
 
-  // if (!token) {
-  //   redirect("/login")
-  // }
+
   return (
     <>
-      <PageHeader title="Início" />
-      <span>hello</span>
+      <h1>Aqui e a Dashboard</h1>
+      <p></p>
     </>
   );
 }

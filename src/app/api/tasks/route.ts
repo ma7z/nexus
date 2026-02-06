@@ -1,29 +1,29 @@
-import { NextRequest, NextResponse } from "next/server";
-import { verify } from "jsonwebtoken";
-import { createTaskService } from "@/services/task.service";
+import { NextRequest, NextResponse } from "next/server"
+import { createTaskService } from "@/services/task.service"
+import { getAuthSession } from "@/repositories/session.repository"
 
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-    const payload = verify(token, process.env.JWT_SECRET!) as {
-      userId: string;
-    };
+    const session = await getAuthSession()
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
 
-    const body = await request.json();
+    const body = await request.json()
 
     const task = await createTaskService({
+      workspaceId: body.workspaceId,
       title: body.title,
       projectId: body.projectId,
-      workspaceId: body.workspaceId,
-      userId: payload.userId,
-    });
+      priority: body.priority,
+      userId: session.userId,
+    })
 
-    return NextResponse.json(task, { status: 201 });
+    return NextResponse.json(task, { status: 201 })
   } catch (error) {
     return NextResponse.json(
-      { error: "Unable to create task" },
+      { error: error instanceof Error ? error.message : "Unable to create task" },
       { status: 400 }
-    );
+    )
   }
 }

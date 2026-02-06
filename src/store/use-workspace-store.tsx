@@ -3,7 +3,9 @@ import { create } from "zustand"
 type User = {
   id: string
   email: string
-  role: "ADMIN" | "MEMBER"
+  username?: string
+  avatar?: string
+  role?: string
 }
 
 type Workspace = {

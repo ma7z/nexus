@@ -1,35 +1,44 @@
+import type { Prisma } from "@prisma/client";
 import {
-  createWorkspaceWithOwner,
+
+  addUserToWorkspace,
+  createWorkspace,
   findUserById,
+  findWorkspaceByIdAndUser,
 } from "../repositories/workspace.repository";
 import { logAuditEvent } from "./audit.service";
+import { findFirstWorkspaceByUserId } from "@/repositories/workspace.repository";
+import { prisma } from "@/lib/prisma";
 
 type CreateWorkspaceInput = {
   name: string;
   userId: string;
 };
 
-export async function createWorkspace(input: CreateWorkspaceInput) {
-  const { name, userId } = input;
+export async function getWorkspaceById(
+  workspaceId: string,
+  userId: string
+) {
+  return findWorkspaceByIdAndUser(workspaceId, userId);
+}
 
-  if (!name || name.trim().length < 3) {
-    throw new Error("Invalid workspace name");
-  }
+export async function getWorkspaceByUser(userId: string) {
+  return findFirstWorkspaceByUserId(userId);
+}
 
-  const userExists = await findUserById(userId);
+export async function createWorkspaceService(
+  name: string,
+  userId: string
+) {
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    const workspace = await createWorkspace(tx, name);
 
-  if (!userExists) {
-    throw new Error("User not found");
-  }
+    await addUserToWorkspace(tx, {
+      userId,
+      workspaceId: workspace.id,
+      role: "ADMIN",
+    });
 
-  const workspace = await createWorkspaceWithOwner(name, userId);
-
-  await logAuditEvent({
-    userId,
-    action: "CREATE_WORKSPACE",
-    entity: "Workspace",
-    entityId: workspace.id,
+    return workspace;
   });
-
-  return workspace;
 }

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { cookies } from "next/headers";
 
 export function createSession(userId: string) {
   const token = crypto.randomUUID();
@@ -11,6 +12,23 @@ export function createSession(userId: string) {
       expiresAt,
     },
   });
+}
+
+export async function getAuthSession() {
+  const cookieStore = await cookies()
+  const token = cookieStore.get("session")?.value
+
+  if (!token) {
+    throw new Error("Unauthorized")
+  }
+
+  const session = await findSession(token)
+
+  if (!session) {
+    throw new Error("Invalid or expired session")
+  }
+
+  return session
 }
 
 export function findSession(token: string) {
@@ -28,6 +46,7 @@ export function findSession(token: string) {
     },
   });
 }
+
 
 export function deleteSession(token: string) {
   return prisma.session.delete({

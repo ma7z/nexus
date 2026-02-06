@@ -9,3 +9,5 @@ export async function getCurrentUser() {
   const session = await findSession(token);
   return session?.user ?? null;
 }
+
+
