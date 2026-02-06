@@ -10,22 +10,23 @@ export function findUserByEmail(email: string) {
 export function createUser(
   tx: Prisma.TransactionClient,
   input: {
-    email: string;
-    password: string;
-    username?: string | null;
-    avatar?: string | null;
+    email: string
+    name: string
+    password: string
+    username: string
+    avatar?: string | null
   }
 ) {
   return tx.user.create({
     data: {
       email: input.email,
       password: input.password,
-      username: input.username || undefined,
-      avatar: input.avatar || undefined,
+      name: input.name,
+      username: input.username,
+      avatar: input.avatar ?? null,
     },
-  });
+  })
 }
-
 
 export function updateUserPassword(
   userId: string,

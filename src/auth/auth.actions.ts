@@ -1,13 +1,14 @@
 "use server"
 
-import { cookies } from "next/headers";
-import { authenticate, invalidateSession } from "./auth.service";
-import { registerUserWithWorkspace } from "./signup.service";
-const SESSION_COOKIE = "session";
+import { cookies } from "next/headers"
+import { authenticate, invalidateSession } from "./auth.service"
+import { registerUserWithWorkspace } from "./signup.service"
+
+const SESSION_COOKIE = "session"
 
 type AuthResponse =
   | { success: true }
-  | { success: false; code: string };
+  | { success: false; code: string }
 
 type SignoutResponse =
   | { success: true }
@@ -20,62 +21,55 @@ export async function signup(
   username: string,
   avatar?: string | null
 ): Promise<AuthResponse> {
-  try {
-    await registerUserWithWorkspace({
-      name,
-      email,
-      password,
-      username,
-      avatar,
-    })
+  const result = await registerUserWithWorkspace({
+    name,
+    email,
+    password,
+    username,
+    avatar,
+  })
 
-    const session = await authenticate(email, password)
-
-    const cookieStore = await cookies()
-    cookieStore.set(SESSION_COOKIE, session.token, {
-      httpOnly: true,
-      path: "/",
-      sameSite: "lax",
-      secure: true,
-    })
-
-    return { success: true }
-  } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, code: error.message }
-    }
-
-    return { success: false, code: "UNKNOWN_ERROR" }
+  if (!result.ok) {
+    return { success: false, code: result.error }
   }
-}
 
+  const auth = await authenticate(email, password)
+
+  if (!auth.ok) {
+    return { success: false, code: auth.error }
+  }
+
+  const cookieStore = await cookies()
+  cookieStore.set(SESSION_COOKIE, auth.session.token, {
+    httpOnly: true,
+    path: "/",
+    sameSite: "lax",
+    secure: true,
+  })
+
+  return { success: true }
+}
 
 export async function login(
   email: string,
   password: string
 ): Promise<AuthResponse> {
-  try {
-    const session = await authenticate(email, password);
+  const auth = await authenticate(email, password)
 
-    const cookieStore = await cookies();
-    cookieStore.set("session", session.token, {
-      httpOnly: true,
-      path: "/",
-      sameSite: "lax",
-      secure: true,
-    });
-
-    return { success: true };
-  } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, code: error.message };
-    }
-
-    return { success: false, code: "UNKNOWN_ERROR" };
+  if (!auth.ok) {
+    return { success: false, code: auth.error }
   }
+
+  const cookieStore = await cookies()
+  cookieStore.set(SESSION_COOKIE, auth.session.token, {
+    httpOnly: true,
+    path: "/",
+    sameSite: "lax",
+    secure: true,
+  })
+
+  return { success: true }
 }
-
-
 
 export async function signout(): Promise<SignoutResponse> {
   try {

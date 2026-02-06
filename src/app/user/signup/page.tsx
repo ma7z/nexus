@@ -1,50 +1,46 @@
 "use client"
 
-import { useState } from "react"
+import { useActionState } from "react"
+import { signupActions } from "./actions"
+import type { SignupState } from "./types"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { signupActions } from "./actions"
 import { motion, AnimatePresence } from "framer-motion"
 import { Icon } from "@iconify/react"
 import { useRouter } from "next/navigation"
 import { NexusLogo } from "@/components/system/nexus-logo"
+import { useFormStatus } from "react-dom"
+import { FormSubmitButton } from "@/components/form-submit-button"
 
+const initialState: SignupState = {}
 
 export default function SignupPage() {
-  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-
-  async function handleSignup(formData: FormData) {
-    const signup = await signupActions(formData)
-    setError(null)
-
-    try {
-      await signupActions(formData)
-    } catch {
-      setError(signup?.error)
-    }
-  }
-
-  const goToLogin = () => {
-    router.push("/user/signin")
-  }
+  const { pending } = useFormStatus()
+  const [state, formAction] = useActionState<
+    SignupState,
+    FormData
+  >(signupActions, initialState)
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
       <form
-        action={handleSignup}
+        action={formAction}
+        noValidate
         className="w-full max-w-sm space-y-6 rounded-xl border bg-background p-6 shadow-sm"
       >
-
         <div className="flex items-center">
-          <Button className="absolute" variant='ghost' size='icon' onClick={(e) => {
-            e.preventDefault()
-            goToLogin()
-          }}>
-            <Icon icon={"iconamoon:arrow-left-1-thin"} className="size-3" />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push("/user/signin")}
+          >
+            <Icon icon="iconamoon:arrow-left-1-thin" className="size-3" />
           </Button>
           <NexusLogo className="items-center" />
         </div>
+
         <div className="space-y-1 text-center">
           <h1 className="text-xl font-semibold tracking-tight">
             Create your account
@@ -55,29 +51,62 @@ export default function SignupPage() {
         </div>
 
         <AnimatePresence mode="wait">
-          {error && (
+          {state.formError && (
             <motion.div
               key="signup-error"
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
               className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
             >
-              {error}
+              {state.formError}
             </motion.div>
           )}
         </AnimatePresence>
 
         <div className="space-y-2">
-          <Input name="name" placeholder="Name" required />
-          <Input name="email" type="email" placeholder="Email" required />
-          <Input name="password" type="password" placeholder="Password" required />
+          <div>
+            <Input defaultValue={state.values?.username} disabled={pending} name="username" placeholder="Username" />
+            {state.fieldErrors?.username && (
+              <p className="text-xs text-destructive">
+                {state.fieldErrors.username[0]}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Input defaultValue={state.values?.name} disabled={pending} name="name" placeholder="Name" />
+            {state.fieldErrors?.name && (
+              <p className="text-xs text-destructive">
+                {state.fieldErrors.name[0]}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Input defaultValue={state.values?.email} disabled={pending} name="email" type="email" placeholder="Email" />
+            {state.fieldErrors?.email && (
+              <p className="text-xs text-destructive">
+                {state.fieldErrors.email[0]}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Input disabled={pending} name="password" type="password" placeholder="Password" />
+            {state.fieldErrors?.password && (
+              <p className="text-xs text-destructive">
+                {state.fieldErrors.password[0]}
+              </p>
+            )}
+          </div>
         </div>
 
-        <Button type="submit" className="w-full">
-          Create account
-        </Button>
+        <FormSubmitButton
+          label="Create account"
+          pendingLabel="Creating account"
+        />
+
       </form>
     </div>
   )

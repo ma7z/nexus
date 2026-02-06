@@ -1,43 +1,23 @@
 "use client"
 
-import { useState } from "react"
-import { resetPasswordAction } from "../action"
+import { useActionState } from "react"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
 import { NexusLogo } from "@/components/system/nexus-logo"
-import { motion, AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import Link from "next/link"
-import { NexusLoading } from "@/components/system/nexus-loading"
+import type { ResetPasswordState } from "../types"
+import { resetPasswordAction } from "../actions"
+import { FormSubmitButton } from "@/components/form-submit-button"
+
+const initialState: ResetPasswordState = {}
 
 export function ResetPasswordForm({ token }: { token: string }) {
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [success, setSuccess] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [state, formAction] = useActionState<
+    ResetPasswordState,
+    FormData
+  >(resetPasswordAction, initialState)
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError(null)
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match")
-      return
-    }
-
-    setLoading(true)
-
-    try {
-      await resetPasswordAction(token, password)
-      setSuccess(true)
-    } catch {
-      setError("Invalid or expired reset link")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (success) {
+  if (state.success) {
     return (
       <div className="w-full max-w-sm rounded-xl border bg-background p-6 text-center shadow-sm space-y-3">
         <NexusLogo className="items-center" />
@@ -48,16 +28,21 @@ export function ResetPasswordForm({ token }: { token: string }) {
           You can now sign in with your new password
         </p>
 
-        <Link href="/user/signin">Go to Login</Link>
+        <Link href="/user/signin" className="font-medium hover:underline">
+          Go to Login
+        </Link>
       </div>
     )
   }
 
   return (
     <form
-      onSubmit={onSubmit}
+      action={formAction}
+      noValidate
       className="w-full max-w-sm rounded-xl border bg-background p-6 shadow-sm space-y-6"
     >
+      <input type="hidden" name="token" value={token} />
+
       <div className="flex flex-col items-center space-y-2 text-center">
         <NexusLogo className="items-center" />
         <h1 className="text-lg font-semibold tracking-tight">
@@ -69,40 +54,51 @@ export function ResetPasswordForm({ token }: { token: string }) {
       </div>
 
       <AnimatePresence mode="wait">
-        {error && (
+        {state.formError && (
           <motion.div
             key="reset-error"
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
             className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
           >
-            {error}
+            {state.formError}
           </motion.div>
         )}
       </AnimatePresence>
 
       <div className="space-y-3">
-        <Input
-          type="password"
-          placeholder="New password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <Input
-          type="password"
-          placeholder="Confirm password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          required
-        />
-      </div>
+        <div>
+          <Input
+            type="password"
+            name="password"
+            placeholder="New password"
+          />
+          {state.fieldErrors?.password && (
+            <p className="text-xs text-destructive">
+              {state.fieldErrors.password[0]}
+            </p>
+          )}
+        </div>
 
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? <NexusLoading className="size-5" /> : "Update password"}
-      </Button>
+        <div>
+          <Input
+            type="password"
+            name="confirmPassword"
+            placeholder="Confirm password"
+          />
+          {state.fieldErrors?.confirmPassword && (
+            <p className="text-xs text-destructive">
+              {state.fieldErrors.confirmPassword[0]}
+            </p>
+          )}
+        </div>
+      </div>
+      <FormSubmitButton
+        label="Update password"
+        pendingLabel="Updating password"
+      />
+
     </form>
   )
 }

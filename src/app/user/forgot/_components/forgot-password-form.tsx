@@ -1,60 +1,41 @@
 "use client"
 
-import { useState } from "react"
-import { forgotPasswordAction } from "../actions"
-import { NexusLogo } from "@/components/system/nexus-logo"
-import { Button } from "@/components/ui/button"
+import { useActionState } from "react"
 import { useRouter } from "next/navigation"
 import { Icon } from "@iconify/react"
-import { Input } from "@/components/ui/input"
 import { AnimatePresence, motion } from "framer-motion"
+import { NexusLogo } from "@/components/system/nexus-logo"
+import { Button } from "@/components/ui/button"
+import type { ForgotPasswordState } from "../types"
+import { forgotPasswordFormAction } from "../actions"
+import { Input } from "@/components/ui/input"
+import { FormSubmitButton } from "@/components/form-submit-button"
+
+const initialState: ForgotPasswordState = {}
 
 export function ForgotPasswordForm() {
-  const [email, setEmail] = useState("")
-  const [success, setSuccess] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
   const router = useRouter()
 
-  const goToLogin = () => {
-    router.push("/user/signin")
-  }
+  const [state, formAction] = useActionState<
+    ForgotPasswordState,
+    FormData
+  >(forgotPasswordFormAction, initialState)
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault()
-
-    if (!email) {
-      setError("Email is required")
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      await forgotPasswordAction(email)
-      setSuccess(true)
-    } catch {
-      setError("Failed to send reset link")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-
-  if (success) {
+  if (state.success) {
     return (
       <div className="w-full max-w-sm space-y-4 rounded-xl border p-6 text-center">
         <div className="flex items-center">
-          <Button className="absolute" variant='ghost' size='icon' onClick={(e) => {
-            e.preventDefault()
-            goToLogin()
-          }}>
-            <Icon icon={"iconamoon:arrow-left-1-thin"} className="size-3" />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push("/user/signin")}
+          >
+            <Icon icon="iconamoon:arrow-left-1-thin" className="size-3" />
           </Button>
           <NexusLogo className="items-center" />
         </div>
+
         <div className="space-y-1">
           <h1 className="text-lg font-semibold">Check your email</h1>
           <p className="text-sm text-muted-foreground">
@@ -65,19 +46,20 @@ export function ForgotPasswordForm() {
     )
   }
 
-
   return (
     <form
-
-      onSubmit={onSubmit}
-      className="w-full max-w-sm rounded-xl border p-6 space-y-4 items-center"
+      action={formAction}
+      noValidate
+      className="w-full max-w-sm rounded-xl border p-6 space-y-4"
     >
       <div className="flex items-center">
-        <Button className="absolute" variant='ghost' size='icon' onClick={(e) => {
-          e.preventDefault()
-          goToLogin()
-        }}>
-          <Icon icon={"iconamoon:arrow-left-1-thin"} className="size-3" />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={() => router.push("/user/signin")}
+        >
+          <Icon icon="iconamoon:arrow-left-1-thin" className="size-3" />
         </Button>
         <NexusLogo className="items-center" />
       </div>
@@ -92,39 +74,38 @@ export function ForgotPasswordForm() {
       </div>
 
       <AnimatePresence mode="wait">
-        {error && (
+        {state.formError && (
           <motion.div
-            key="fogot-error"
+            key="forgot-error"
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
             className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
           >
-            {error}
+            {state.formError}
           </motion.div>
         )}
       </AnimatePresence>
-      <Input
-        type="email"
-        placeholder="Email address"
-        value={email}
-        onChange={(e) => {
-          setEmail(e.target.value)
-          if (error) setError(null)
-        }}
-        required
+
+      <div>
+        <Input
+          name="email"
+          type="email"
+          placeholder="Email address"
+          defaultValue={state.values?.email}
+        />
+        {state.fieldErrors?.email && (
+          <p className="text-xs text-destructive">
+            {state.fieldErrors.email[0]}
+          </p>
+        )}
+      </div>
+
+      <FormSubmitButton
+        label="Send reset link"
+        pendingLabel="Sending..."
       />
 
-
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={loading}
-
-      >
-        {loading ? "Sending..." : "Send reset link"}
-      </Button>
     </form>
   )
 }

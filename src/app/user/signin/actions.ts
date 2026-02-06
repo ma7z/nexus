@@ -4,30 +4,29 @@ import { authenticate } from "@/auth/auth.service"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { loginSchema } from "./schema"
-import type { AuthError } from "./errors"
+import type { LoginState } from "./types"
 
 const SESSION_COOKIE = "session"
-
-type LoginState = {
-  formErrors?: {
-    email?: string[]
-    password?: string[]
-  }
-  authError?: AuthError
-}
 
 export async function loginActions(
   _prevState: LoginState,
   formData: FormData
 ): Promise<LoginState> {
+  const values = {
+    email: formData.get("email")?.toString(),
+  }
+
+  const password = formData.get("password")?.toString()
+
   const parsed = loginSchema.safeParse({
-    email: formData.get("email"),
-    password: formData.get("password"),
+    ...values,
+    password,
   })
 
   if (!parsed.success) {
     return {
-      formErrors: parsed.error.flatten().fieldErrors,
+      values,
+      fieldErrors: parsed.error.flatten().fieldErrors,
     }
   }
 
@@ -37,13 +36,34 @@ export async function loginActions(
   )
 
   if (!result.ok) {
+    if (result.error === "EMAIL_NOT_FOUND") {
+      return {
+        values,
+        fieldErrors: {
+          email: ["Email not found"],
+        },
+      }
+    }
+
+    if (result.error === "INVALID_PASSWORD") {
+      return {
+        values,
+        fieldErrors: {
+          password: ["Invalid password"],
+        },
+      }
+    }
+
     return {
-      authError: result.error,
+      values,
+      formError: "Unable to authenticate",
     }
   }
 
   const cookieStore = await cookies()
-  cookieStore.set(SESSION_COOKIE, result.session.token, {
+  cookieStore.set({
+    name: SESSION_COOKIE,
+    value: result.session.token,
     httpOnly: true,
     path: "/",
     sameSite: "lax",
